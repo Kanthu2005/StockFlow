@@ -1,5 +1,7 @@
-"""SQLAlchemy models module."""
+"""Models package initialization and metadata registration."""
 
-from app.database.base import Base
+from app.models.organization import Organization
+from app.models.user import User
+from app.models.product import Product
 
-__all__ = ["Base"]
+__all__ = ["Organization", "User", "Product"]

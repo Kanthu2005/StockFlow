@@ -1,4 +1,4 @@
-"""Core application configuration and settings."""
+"""Centralized application configuration using Pydantic Settings."""
 
 from typing import List, Union
 from pydantic import field_validator
@@ -7,17 +7,29 @@ import json
 
 
 class Settings(BaseSettings):
+    """Application settings loaded securely from environment variables."""
+
+    # Project metadata
     PROJECT_NAME: str = "StockFlow - Inventory Management System"
     VERSION: str = "0.1.0"
-    API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    DEBUG: bool = False
+
+    # Security
     SECRET_KEY: str = "temporary-secret-key-change-in-production"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    # Database (PostgreSQL with psycopg2 driver default)
-    DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/stockflow_db"
+    # PostgreSQL Database URL (Psycopg 3)
+    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/stockflow_db"
 
-    # CORS origins
+    # Connection pooling configuration
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 1800
+
+    # CORS Configuration
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",

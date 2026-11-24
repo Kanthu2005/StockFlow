@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.routes.health import router as health_router
+from app.routes.auth import router as auth_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -25,6 +26,9 @@ if settings.CORS_ORIGINS:
 
 # Mount health check at /api/health
 app.include_router(health_router, prefix="/api")
+
+# Mount authentication endpoints at /api/auth
+app.include_router(auth_router, prefix="/api/auth")
 
 
 @app.get("/")
