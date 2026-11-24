@@ -14,6 +14,11 @@ from app.schemas.product import (
     ProductResponse,
     ProductListResponse,
 )
+from app.schemas.dashboard import (
+    DashboardSummaryResponse,
+    LowStockItemResponse,
+    LowStockListResponse,
+)
 
 __all__ = [
     "HealthResponse",
@@ -26,4 +31,7 @@ __all__ = [
     "ProductUpdate",
     "ProductResponse",
     "ProductListResponse",
+    "DashboardSummaryResponse",
+    "LowStockItemResponse",
+    "LowStockListResponse",
 ]
