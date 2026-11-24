@@ -1,3 +1,3 @@
-from app.services.inventory_service import InventoryService, inventory_service
+"""Services and business logic module."""
 
-__all__ = ["InventoryService", "inventory_service"]
+__all__ = []

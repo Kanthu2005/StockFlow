@@ -1,4 +1,5 @@
-from app.schemas.health import HealthResponse
-from app.schemas.item import ItemBase, ItemCreate, ItemUpdate, ItemResponse
+"""Pydantic schemas module."""
 
-__all__ = ["HealthResponse", "ItemBase", "ItemCreate", "ItemUpdate", "ItemResponse"]
+from app.routes.health import HealthResponse
+
+__all__ = ["HealthResponse"]

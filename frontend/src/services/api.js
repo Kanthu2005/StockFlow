@@ -5,17 +5,18 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 8000,
 });
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const customError = {
-      message: error.response?.data?.detail || error.message || 'Network Error',
-      status: error.response?.status,
+    const errorPayload = {
+      message: error.response?.data?.detail || error.message || 'Service unavailable',
+      status: error.response?.status || 500,
+      url: error.config?.url,
     };
-    return Promise.reject(customError);
+    return Promise.reject(errorPayload);
   }
 );
 

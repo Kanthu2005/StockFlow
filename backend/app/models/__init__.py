@@ -1,3 +1,5 @@
-from app.models.item import Item
+"""SQLAlchemy models module."""
 
-__all__ = ["Item"]
+from app.database.base import Base
+
+__all__ = ["Base"]

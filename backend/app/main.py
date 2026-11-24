@@ -1,20 +1,19 @@
-"""Main FastAPI application entry point."""
+"""FastAPI application entry point."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routes.api import api_router
+from app.routes.health import router as health_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="StockFlow - Modern SaaS Inventory Management System API",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    description="StockFlow - Inventory Management System API",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-# CORS configuration
+# CORS configuration for local development
 if settings.CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
@@ -24,16 +23,17 @@ if settings.CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Include API v1 router
-app.include_router(api_router, prefix=settings.API_V1_STR)
+# Mount health check at /api/health
+app.include_router(health_router, prefix="/api")
 
 
-@app.get("/", tags=["Root"])
+@app.get("/")
 def root():
-    """Root endpoint welcoming users to the API."""
+    """Root endpoint."""
     return {
-        "message": f"Welcome to {settings.PROJECT_NAME} API",
+        "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
+        "status": "online",
         "docs": "/docs",
-        "health": f"{settings.API_V1_STR}/health",
+        "health": "/api/health",
     }

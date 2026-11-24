@@ -3,7 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  *, ::before, ::after {
+    border-color: #e4e4e7; /* zinc-200 */
+  }
+
   body {
-    @apply bg-slate-50 text-slate-800 antialiased;
+    @apply bg-white text-zinc-900 antialiased font-sans text-sm;
+    color: #18181b;
   }
 }
