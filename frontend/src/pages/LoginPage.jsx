@@ -31,18 +31,18 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
 
-    setIsLoading(true);
-    try {
-      await login(email, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setErrors({ form: err.message || 'Login failed. Please check credentials.' });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(true);
+        try {
+          await login(email, password);
+          navigate('/dashboard');
+        } catch (err) {
+          setErrors({ form: err.message || 'Login failed. Please check credentials.' });
+        } finally {
+          setIsLoading(false);
     }
   };
 

@@ -43,18 +43,18 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
 
-    setIsLoading(true);
-    try {
-      await signup(formData);
-      navigate('/dashboard');
-    } catch (err) {
-      setErrors({ form: err.message || 'Registration failed.' });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(true);
+        try {
+          await signup(formData);
+          navigate('/dashboard');
+        } catch (err) {
+          setErrors({ form: err.message || 'Registration failed.' });
+        } finally {
+          setIsLoading(false);
     }
   };
 

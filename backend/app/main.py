@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.routes.health import router as health_router
 from app.routes.auth import router as auth_router
+from app.routes.products import router as products_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -29,6 +30,9 @@ app.include_router(health_router, prefix="/api")
 
 # Mount authentication endpoints at /api/auth
 app.include_router(auth_router, prefix="/api/auth")
+
+# Mount products inventory endpoints at /api/products
+app.include_router(products_router, prefix="/api/products")
 
 
 @app.get("/")

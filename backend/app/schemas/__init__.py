@@ -8,6 +8,12 @@ from app.schemas.auth import (
     TokenResponse,
     TokenPayload,
 )
+from app.schemas.product import (
+    ProductCreate,
+    ProductUpdate,
+    ProductResponse,
+    ProductListResponse,
+)
 
 __all__ = [
     "HealthResponse",
@@ -16,4 +22,8 @@ __all__ = [
     "UserResponse",
     "TokenResponse",
     "TokenPayload",
+    "ProductCreate",
+    "ProductUpdate",
+    "ProductResponse",
+    "ProductListResponse",
 ]

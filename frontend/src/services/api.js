@@ -20,11 +20,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const errorPayload = {
-      message: error.response?.data?.detail || error.message || 'Service unavailable',
-      status: error.response?.status || 500,
-      url: error.config?.url,
-    };
-    return Promise.reject(errorPayload);
+  message: error.response?.data?.detail || error.message || 'Service unavailable',
+  status: error.response?.status || 500,
+  url: error.config?.url,
+};
+return Promise.reject(errorPayload);
   }
 );
 
