@@ -26,17 +26,17 @@ if settings.CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Mount health check at /api/health
+# Standard API routes under /api prefix
 app.include_router(health_router, prefix="/api")
-
-# Mount authentication endpoints at /api/auth
 app.include_router(auth_router, prefix="/api/auth")
-
-# Mount products inventory endpoints at /api/products
 app.include_router(products_router, prefix="/api/products")
-
-# Mount dashboard metrics endpoints at /api/dashboard
 app.include_router(dashboard_router, prefix="/api/dashboard")
+
+# Direct route aliases for backward-compatibility and resilient routing
+app.include_router(health_router, include_in_schema=False)
+app.include_router(auth_router, prefix="/auth", include_in_schema=False)
+app.include_router(products_router, prefix="/products", include_in_schema=False)
+app.include_router(dashboard_router, prefix="/dashboard", include_in_schema=False)
 
 
 @app.get("/")

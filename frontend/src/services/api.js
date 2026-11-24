@@ -1,13 +1,24 @@
 /**
  * Centralized Axios HTTP Client
  * - Configured with base URL from VITE_API_BASE_URL (defaults to http://127.0.0.1:8000/api)
+ * - Guarantees /api prefix resolution
  * - Automatic Authorization: Bearer <token> request injection
  * - Unified response error formatting
  */
 import axios from 'axios';
 
+// Normalize base URL to ensure trailing /api is always present
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) {
+    return 'http://127.0.0.1:8000/api';
+  }
+  const trimmed = envUrl.trim().replace(/\/+$/, '');
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
