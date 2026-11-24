@@ -28,8 +28,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const userInitial = user?.email
     ? user.email[0].toUpperCase()
     : user?.organization_name
-    ? user.organization_name[0].toUpperCase()
-    : 'U';
+      ? user.organization_name[0].toUpperCase()
+      : 'U';
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-zinc-200">
@@ -71,10 +71,9 @@ export default function Sidebar({ isOpen, onClose }) {
               to={item.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
-                  isActive
-                    ? 'bg-zinc-100 text-zinc-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)]'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
+                `flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive
+                  ? 'bg-zinc-100 text-zinc-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)]'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
                 }`
               }
             >
@@ -89,51 +88,51 @@ export default function Sidebar({ isOpen, onClose }) {
       <div className="p-3 border-t border-zinc-200 bg-white">
         <div className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-zinc-50 transition-colors">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded bg-zinc-900 text-white flex items-center justify-center text-xs font-semibold shrink-0">
-              {userInitial}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-zinc-900 truncate" title={user?.email}>
-                {user?.email || 'Authenticated User'}
-              </p>
-              <p className="text-[11px] text-zinc-400 truncate" title={user?.organization_name}>
-                {user?.organization_name || 'Organization'}
-              </p>
+              <div className="w-7 h-7 rounded bg-zinc-900 text-white flex items-center justify-center text-xs font-semibold shrink-0">
+                {userInitial}
+              </div>
+              <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-zinc-900 truncate" title={user?.email}>
+                    {user?.email || 'Authenticated User'}
+                  </p>
+                    <p className="text-[11px] text-zinc-400 truncate" title={user?.organization_name}>
+                      {user?.organization_name || 'Organization'}
+                    </p>
+                  </div>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                title="Log out"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded transition-colors"
+                aria-label="Log out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           </div>
-
-          <button
-            onClick={handleLogout}
-            title="Log out"
-            className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded transition-colors"
-            aria-label="Log out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
-      </div>
-    </div>
-  );
+        );
 
-  return (
-    <>
-      {/* Desktop Static Sidebar */}
-      <aside className="hidden md:block w-56 shrink-0 h-screen sticky top-0">
-        {sidebarContent}
-      </aside>
-
-      {/* Mobile Drawer */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          <div
-            className="fixed inset-0 bg-zinc-900/40 backdrop-blur-[1px]"
-            onClick={onClose}
-          />
-          <div className="relative w-64 max-w-[80vw] h-full z-10 animate-in slide-in-from-left duration-150">
+        return (
+        <>
+          {/* Desktop Static Sidebar */}
+          <aside className="hidden md:block w-56 shrink-0 h-screen sticky top-0">
             {sidebarContent}
-          </div>
-        </div>
-      )}
-    </>
-  );
+          </aside>
+
+          {/* Mobile Drawer */}
+          {isOpen && (
+            <div className="fixed inset-0 z-50 md:hidden flex">
+              <div
+                className="fixed inset-0 bg-zinc-900/40 backdrop-blur-[1px]"
+                onClick={onClose}
+              />
+              <div className="relative w-64 max-w-[80vw] h-full z-10 animate-in slide-in-from-left duration-150">
+                {sidebarContent}
+              </div>
+            </div>
+          )}
+        </>
+        );
 }

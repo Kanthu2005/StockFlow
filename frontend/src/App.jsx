@@ -13,68 +13,68 @@ import ProductsPage from './pages/ProductsPage';
 import ProductFormPage from './pages/ProductFormPage';
 import SettingsPage from './pages/SettingsPage';
 
-function PublicRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+  function PublicRoute({ children }) {
+    const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
-    return null;
-  }
+      if (loading) {
+        return null;
+      }
 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
+      if (isAuthenticated) {
+        return <Navigate to="/dashboard" replace />;
+      }
 
-  return children;
-}
+      return children;
+    }
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ProductProvider>
-          <SettingsProvider>
-            <Routes>
-              {/* Public Authentication Screens (Redirect if already authenticated) */}
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <LoginPage />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <PublicRoute>
-                    <SignupPage />
-                  </PublicRoute>
-                }
-              />
+    export default function App() {
+      return (
+        <BrowserRouter>
+          <AuthProvider>
+            <ProductProvider>
+              <SettingsProvider>
+                <Routes>
+                  {/* Public Authentication Screens (Redirect if already authenticated) */}
+                  <Route
+                    path="/login"
+                    element={
+                      <PublicRoute>
+                        <LoginPage />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/signup"
+                    element={
+                      <PublicRoute>
+                        <SignupPage />
+                      </PublicRoute>
+                    }
+                  />
 
-              {/* Protected Application Screens */}
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Routes>
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/products" element={<ProductsPage />} />
-                        <Route path="/products/new" element={<ProductFormPage />} />
-                        <Route path="/products/:id/edit" element={<ProductFormPage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                      </Routes>
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </SettingsProvider>
-        </ProductProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  );
-}
+                  {/* Protected Application Screens */}
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <AppLayout>
+                          <Routes>
+                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/dashboard" element={<DashboardPage />} />
+                            <Route path="/products" element={<ProductsPage />} />
+                            <Route path="/products/new" element={<ProductFormPage />} />
+                            <Route path="/products/:id/edit" element={<ProductFormPage />} />
+                            <Route path="/settings" element={<SettingsPage />} />
+                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                          </Routes>
+                        </AppLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </SettingsProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      );
+    }

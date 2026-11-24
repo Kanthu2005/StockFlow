@@ -1,57 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
+import productService from '../services/productService';
 import { useProducts } from '../context/ProductContext';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
 import Button from '../components/ui/Button';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
 
 export default function ProductFormPage() {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
-  const { getProduct, addProduct, updateProduct } = useProducts();
+  const { showNotification } = useProducts();
 
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
     description: '',
     quantity: '0',
-    cost_price: '0.00',
-    selling_price: '0.00',
-    low_stock_threshold: '10',
+    cost_price: '',
+    selling_price: '',
+    low_stock_threshold: '',
   });
 
   const [errors, setErrors] = useState({});
-  const [notFound, setNotFound] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const [isLoadingProduct, setIsLoadingProduct] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
-  // Load existing product if editing
+  // Load existing product if in Edit Mode
   useEffect(() => {
     if (isEditMode) {
-      const existing = getProduct(id);
-      if (existing) {
-        setFormData({
-          name: existing.name || '',
-          sku: existing.sku || '',
-          description: existing.description || '',
-          quantity: String(existing.quantity ?? 0),
-          cost_price: String(existing.cost_price ?? 0),
-          selling_price: String(existing.selling_price ?? 0),
-          low_stock_threshold: String(existing.low_stock_threshold ?? 10),
+      let isMounted = true;
+      setIsLoadingProduct(true);
+      setNotFound(false);
+      setServerError('');
+
+      productService
+        .getProduct(id)
+        .then((product) => {
+          if (isMounted) {
+            setFormData({
+              name: product.name || '',
+              sku: product.sku || '',
+              description: product.description || '',
+              quantity: String(product.quantity_on_hand ?? 0),
+              cost_price: product.cost_price != null ? String(product.cost_price) : '',
+              selling_price: product.selling_price != null ? String(product.selling_price) : '',
+              low_stock_threshold: product.low_stock_threshold != null ? String(product.low_stock_threshold) : '',
+            });
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setNotFound(true);
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsLoadingProduct(false);
+          }
         });
-      } else {
-        setNotFound(true);
-      }
+
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [id, isEditMode, getProduct]);
+  }, [id, isEditMode]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    if (serverError) setServerError('');
   };
 
   const validate = () => {
@@ -63,8 +87,6 @@ export default function ProductFormPage() {
 
     if (!formData.sku.trim()) {
       newErrors.sku = 'SKU is required.';
-    } else if (!/^[A-Za-z0-9-_]+$/.test(formData.sku.trim())) {
-      newErrors.sku = 'SKU must only contain alphanumeric characters, hyphens, or underscores.';
     }
 
     const qty = Number(formData.quantity);
@@ -72,54 +94,73 @@ export default function ProductFormPage() {
       newErrors.quantity = 'Quantity must be a non-negative whole number.';
     }
 
-    const cost = Number(formData.cost_price);
-    if (formData.cost_price === '' || isNaN(cost) || cost < 0) {
-      newErrors.cost_price = 'Cost price must be a non-negative number.';
+    if (formData.cost_price !== '') {
+      const cost = Number(formData.cost_price);
+      if (isNaN(cost) || cost < 0) {
+        newErrors.cost_price = 'Cost price must be a non-negative number.';
+      }
     }
 
-    const price = Number(formData.selling_price);
-    if (formData.selling_price === '' || isNaN(price) || price < 0) {
-      newErrors.selling_price = 'Selling price must be a non-negative number.';
+    if (formData.selling_price !== '') {
+      const price = Number(formData.selling_price);
+      if (isNaN(price) || price < 0) {
+        newErrors.selling_price = 'Selling price must be a non-negative number.';
+      }
     }
 
-    const threshold = Number(formData.low_stock_threshold);
-    if (
-      formData.low_stock_threshold !== '' &&
-      (isNaN(threshold) || threshold < 0 || !Number.isInteger(threshold))
-    ) {
-      newErrors.low_stock_threshold = 'Threshold must be a non-negative integer.';
+    if (formData.low_stock_threshold !== '') {
+      const threshold = Number(formData.low_stock_threshold);
+      if (isNaN(threshold) || threshold < 0 || !Number.isInteger(threshold)) {
+        newErrors.low_stock_threshold = 'Threshold must be a non-negative integer.';
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    setServerError('');
+
+    if (!validate() || isSubmitting) return;
 
     setIsSubmitting(true);
 
     const payload = {
       name: formData.name.trim(),
-      sku: formData.sku.trim().toUpperCase(),
-      description: formData.description.trim(),
-      quantity: parseInt(formData.quantity, 10),
-      cost_price: parseFloat(formData.cost_price),
-      selling_price: parseFloat(formData.selling_price),
-      low_stock_threshold: formData.low_stock_threshold ? parseInt(formData.low_stock_threshold, 10) : 10,
+      sku: formData.sku.trim(),
+      description: formData.description.trim() || null,
+      quantity_on_hand: parseInt(formData.quantity, 10),
+      cost_price: formData.cost_price !== '' ? parseFloat(formData.cost_price) : null,
+      selling_price: formData.selling_price !== '' ? parseFloat(formData.selling_price) : null,
+      low_stock_threshold: formData.low_stock_threshold !== '' ? parseInt(formData.low_stock_threshold, 10) : null,
     };
 
-    setTimeout(() => {
+    try {
       if (isEditMode) {
-        updateProduct(id, payload);
+        const updated = await productService.updateProduct(id, payload);
+        showNotification(`Product "${updated.name}" updated successfully.`);
       } else {
-        addProduct(payload);
+        const created = await productService.createProduct(payload);
+        showNotification(`Product "${created.name}" created successfully.`);
       }
-      setIsSubmitting(false);
       navigate('/products');
-    }, 250);
+    } catch (err) {
+      setServerError(err.message || 'Failed to save product. Please check your input.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoadingProduct) {
+    return (
+      <div className="bg-white border border-zinc-200 rounded-md p-16 text-center space-y-3">
+        <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-zinc-500">Loading product information...</p>
+      </div>
+    );
+  }
 
   if (notFound) {
     return (
@@ -130,7 +171,7 @@ export default function ProductFormPage() {
         <div>
           <h2 className="text-base font-semibold text-zinc-900">Product Not Found</h2>
           <p className="text-xs text-zinc-500 mt-1">
-            The requested product identifier does not exist in the active catalogue.
+            The requested product identifier does not exist or belongs to another organization.
           </p>
         </div>
         <Link to="/products">
@@ -144,7 +185,7 @@ export default function ProductFormPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Page Header */}
+      {/* Back Link */}
       <div className="flex items-center gap-2">
         <Link
           to="/products"
@@ -164,6 +205,14 @@ export default function ProductFormPage() {
         }
       />
 
+      {/* Server Error Alert */}
+      {serverError && (
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-md text-xs text-rose-700 flex items-start gap-2.5 animate-in fade-in-0 duration-150">
+          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+          <span>{serverError}</span>
+        </div>
+      )}
+
       {/* Form Card */}
       <form onSubmit={handleSubmit} className="bg-white border border-zinc-200 rounded-md p-6 space-y-6">
         <div className="space-y-4">
@@ -178,6 +227,7 @@ export default function ProductFormPage() {
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="e.g. Industrial Barcode Scanner"
             error={errors.name}
+            disabled={isSubmitting}
             required
           />
 
@@ -187,8 +237,9 @@ export default function ProductFormPage() {
             value={formData.sku}
             onChange={(e) => handleChange('sku', e.target.value)}
             placeholder="e.g. BAR-WLS-01"
-            helperText="Alphanumeric code used to track this item across warehouses."
+            helperText="Unique identifier used to track this item within your organization."
             error={errors.sku}
+            disabled={isSubmitting}
             required
           />
 
@@ -199,6 +250,7 @@ export default function ProductFormPage() {
             onChange={(e) => handleChange('description', e.target.value)}
             placeholder="Technical details, dimensions, package quantity..."
             rows={3}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -217,19 +269,21 @@ export default function ProductFormPage() {
               value={formData.quantity}
               onChange={(e) => handleChange('quantity', e.target.value)}
               error={errors.quantity}
+              disabled={isSubmitting}
               required
             />
 
             <Input
-              label="Low-Stock Threshold"
+              label="Low-Stock Threshold (Optional)"
               name="low_stock_threshold"
               type="number"
               min="0"
               step="1"
               value={formData.low_stock_threshold}
               onChange={(e) => handleChange('low_stock_threshold', e.target.value)}
-              helperText="Alerts trigger when quantity drops to or below this level."
+              helperText="Leave empty to use organization default threshold."
               error={errors.low_stock_threshold}
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -248,8 +302,9 @@ export default function ProductFormPage() {
               step="0.01"
               value={formData.cost_price}
               onChange={(e) => handleChange('cost_price', e.target.value)}
+              placeholder="0.00"
               error={errors.cost_price}
-              required
+              disabled={isSubmitting}
             />
 
             <Input
@@ -260,8 +315,9 @@ export default function ProductFormPage() {
               step="0.01"
               value={formData.selling_price}
               onChange={(e) => handleChange('selling_price', e.target.value)}
+              placeholder="0.00"
               error={errors.selling_price}
-              required
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -277,6 +333,7 @@ export default function ProductFormPage() {
             type="submit"
             variant="primary"
             loading={isSubmitting}
+            disabled={isSubmitting}
           >
             {isEditMode ? 'Save Changes' : 'Create Product'}
           </Button>

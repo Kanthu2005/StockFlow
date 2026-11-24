@@ -20,11 +20,12 @@ export default function Badge({ variant = 'neutral', children, className = '' })
   );
 }
 
-export function StockStatusBadge({ quantity, threshold = 10 }) {
+export function StockStatusBadge({ isLowStock, quantity, threshold = 5 }) {
   if (quantity <= 0) {
     return <Badge variant="danger">Out of stock</Badge>;
   }
-  if (quantity <= threshold) {
+  const isAlert = isLowStock !== undefined ? isLowStock : quantity <= threshold;
+  if (isAlert) {
     return <Badge variant="warning">Low stock</Badge>;
   }
   return <Badge variant="success">In stock</Badge>;
