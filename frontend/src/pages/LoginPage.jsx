@@ -23,24 +23,27 @@ export default function LoginPage() {
 
     if (!password) {
       newErrors.password = 'Password is required.';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters.';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters.';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      login(email, password);
-      setIsLoading(false);
+    try {
+      await login(email, password);
       navigate('/dashboard');
-    }, 400);
+    } catch (err) {
+      setErrors({ form: err.message || 'Login failed. Please check credentials.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
