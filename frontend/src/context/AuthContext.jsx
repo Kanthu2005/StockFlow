@@ -1,154 +1,130 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+/**
+ * Centralized Authentication Context
+ * Manages authenticated user state, JWT token persistence, and initialization.
+ */
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
+const TOKEN_KEY = 'stockflow_token';
+
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => {
-      const cached = localStorage.getItem('sf_user');
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch {
-          return null;
-        }
-      }
-      // Default demo user for instant preview if no session exists
-      return {
-        name: 'Alex Chen',
-        email: 'alex@stockflow.dev',
-        organization: 'Acme Logistics Inc.',
-        role: 'Inventory Operations Lead',
-      };
-    });
-    const [isAuthenticated, setIsAuthenticated] = useState(true);
-    const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-      // Validate active token on initial load
-      useEffect(() => {
-        const token = localStorage.getItem('sf_token');
-        if (token) {
-          api
-            .get('/api/auth/me')
-            .then((res) => {
-              const profile = res.data;
-              const authUser = {
-                id: profile.id,
-                name: profile.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-                email: profile.email,
-                organization: profile.organization_name,
-                organization_id: profile.organization_id,
-                role: 'Administrator',
-              };
-              setUser(authUser);
-              setIsAuthenticated(true);
-              localStorage.setItem('sf_user', JSON.stringify(authUser));
-            })
-            .catch(() => {
-              localStorage.removeItem('sf_token');
-              localStorage.removeItem('sf_user');
-            });
-        }
-      }, []);
+  // Initialize and validate session on mount
+  useEffect(() => {
+    let isMounted = true;
 
-      const login = async (email, password) => {
-        setLoading(true);
-        try {
-          const res = await api.post('/api/auth/login', { email, password });
-          const { access_token, user: profile } = res.data;
-          localStorage.setItem('sf_token', access_token);
-          const authUser = {
-            id: profile.id,
-            name: profile.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-            email: profile.email,
-            organization: profile.organization_name,
-            organization_id: profile.organization_id,
-            role: 'Administrator',
-          };
-          setUser(authUser);
-          setIsAuthenticated(true);
-          localStorage.setItem('sf_user', JSON.stringify(authUser));
-          return { success: true };
-        } catch (err) {
-          // Graceful fallback to demo account if offline or backend error
-          const mockUser = {
-            name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Team Member',
-            email,
-            organization: 'Acme Logistics Inc.',
-            role: 'Operations Manager',
-          };
-          setUser(mockUser);
-          setIsAuthenticated(true);
-          return { success: true, offline: true, error: err.message };
-        } finally {
+    async function initializeAuth() {
+      const storedToken = localStorage.getItem(TOKEN_KEY);
+
+      if (!storedToken) {
+        if (isMounted) {
+          setUser(null);
+          setToken(null);
           setLoading(false);
         }
-      };
-
-        const signup = async ({ name, email, organization, password }) => {
-          setLoading(true);
-          try {
-            const res = await api.post('/api/auth/register', {
-              email,
-              password: password || 'SecurePassword123!',
-              organization_name: organization,
-            });
-            const { access_token, user: profile } = res.data;
-            localStorage.setItem('sf_token', access_token);
-            const authUser = {
-              id: profile.id,
-              name: name || profile.email.split('@')[0],
-              email: profile.email,
-              organization: profile.organization_name,
-              organization_id: profile.organization_id,
-              role: 'Administrator',
-            };
-            setUser(authUser);
-            setIsAuthenticated(true);
-            localStorage.setItem('sf_user', JSON.stringify(authUser));
-            return { success: true };
-          } catch (err) {
-            const mockUser = {
-              name,
-              email,
-              organization,
-              role: 'Administrator',
-            };
-            setUser(mockUser);
-            setIsAuthenticated(true);
-            return { success: true, offline: true, error: err.message };
-          } finally {
-            setLoading(false);
-          }
-        };
-
-        const logout = () => {
-          localStorage.removeItem('sf_token');
-          localStorage.removeItem('sf_user');
-          setUser(null);
-          setIsAuthenticated(false);
-        };
-
-        return (
-          <AuthContext.Provider
-            value={{
-              user,
-              isAuthenticated,
-              loading,
-              login,
-              signup,
-              logout,
-            }}
-          >
-            {children}
-          </AuthContext.Provider>
-        );
+        return;
       }
 
-      export function useAuth() {
-        const context = useContext(AuthContext);
-        if (!context) {
-          throw new Error('useAuth must be used within an AuthProvider');
+      try {
+        const userProfile = await authService.getCurrentUser();
+        if (isMounted) {
+          setUser(userProfile);
+          setToken(storedToken);
+          setError(null);
         }
-        return context;
+      } catch (err) {
+        // Token invalid or expired: clear storage and reset state
+        if (isMounted) {
+          localStorage.removeItem(TOKEN_KEY);
+          setUser(null);
+          setToken(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
+    }
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  /**
+   * Log in user with email and password
+   */
+  const login = useCallback(async (email, password) => {
+    setError(null);
+    try {
+      const data = await authService.login({ email, password });
+      localStorage.setItem(TOKEN_KEY, data.access_token);
+      setToken(data.access_token);
+      setUser(data.user);
+      return data.user;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Register a new organization and admin account
+   */
+  const register = useCallback(async ({ email, password, organization_name }) => {
+    setError(null);
+    try {
+      const data = await authService.register({ email, password, organization_name });
+      localStorage.setItem(TOKEN_KEY, data.access_token);
+      setToken(data.access_token);
+      setUser(data.user);
+      return data.user;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Log out user and wipe stored tokens
+   */
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+    setUser(null);
+    setError(null);
+  }, []);
+
+  const value = {
+    user,
+    token,
+    organization: user ? { id: user.organization_id, name: user.organization_name } : null,
+    isAuthenticated: Boolean(user && token),
+    loading,
+    error,
+    login,
+    register,
+    signup: register, // alias for backwards compatibility
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export default AuthContext;

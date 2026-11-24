@@ -15,7 +15,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   const navItems = [
@@ -23,6 +23,13 @@ export default function Sidebar({ isOpen, onClose }) {
     { name: 'Products', to: '/products', icon: Package },
     { name: 'Settings', to: '/settings', icon: Settings },
   ];
+
+  // Derive initial from email or organization name
+  const userInitial = user?.email
+    ? user.email[0].toUpperCase()
+    : user?.organization_name
+    ? user.organization_name[0].toUpperCase()
+    : 'U';
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-zinc-200">
@@ -82,22 +89,15 @@ export default function Sidebar({ isOpen, onClose }) {
       <div className="p-3 border-t border-zinc-200 bg-white">
         <div className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-zinc-50 transition-colors">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded bg-zinc-100 border border-zinc-200 flex items-center justify-center text-xs font-semibold text-zinc-700 shrink-0">
-              {user?.name
-                ? user.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .substring(0, 2)
-                    .toUpperCase()
-                : 'U'}
+            <div className="w-7 h-7 rounded bg-zinc-900 text-white flex items-center justify-center text-xs font-semibold shrink-0">
+              {userInitial}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-zinc-900 truncate">
-                {user?.name || 'Authorized User'}
+              <p className="text-xs font-medium text-zinc-900 truncate" title={user?.email}>
+                {user?.email || 'Authenticated User'}
               </p>
-              <p className="text-[11px] text-zinc-400 truncate">
-                {user?.organization || 'Acme Logistics'}
+              <p className="text-[11px] text-zinc-400 truncate" title={user?.organization_name}>
+                {user?.organization_name || 'Organization'}
               </p>
             </div>
           </div>

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Menu, CheckCircle2, AlertCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useProducts } from '../context/ProductContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function AppLayout({ children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { notification, dismissNotification } = useProducts();
+  const { user } = useAuth();
 
   return (
       <div className="min-h-screen flex bg-zinc-50 font-sans text-zinc-900">
@@ -28,11 +30,11 @@ export default function AppLayout({ children }) {
                 <Menu className="w-4 h-4" />
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 border border-zinc-200">
-                  Preview Session
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
+                  {user?.organization_name || 'StockFlow Organization'}
                 </span>
                 <span className="hidden sm:inline text-xs text-zinc-400">
-                  In-memory client state
+                  {user?.email}
                 </span>
               </div>
             </div>

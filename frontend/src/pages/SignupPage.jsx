@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
-    name: 'Alex Chen',
-    organization: 'Acme Logistics Inc.',
-    email: 'alex@stockflow.dev',
-    password: 'password123',
+    organization: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signup } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (field, value) => {
@@ -22,39 +24,55 @@ export default function SignupPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    if (serverError) setServerError('');
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Full name is required.';
-    if (!formData.organization.trim()) newErrors.organization = 'Organization name is required.';
-    if (!formData.email.trim()) {
+
+    if (!formData.organization.trim()) {
+      newErrors.organization = 'Organization name is required.';
+    }
+
+    const trimmedEmail = formData.email.trim();
+    if (!trimmedEmail) {
       newErrors.email = 'Email address is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       newErrors.email = 'Please enter a valid email address.';
     }
+
     if (!formData.password) {
       newErrors.password = 'Password is required.';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters.';
     }
 
+    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (!validate()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setServerError('');
 
-      setIsLoading(true);
-        try {
-          await signup(formData);
-          navigate('/dashboard');
-        } catch (err) {
-          setErrors({ form: err.message || 'Registration failed.' });
-        } finally {
-          setIsLoading(false);
+    if (!validate() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        organization_name: formData.organization,
+      });
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setServerError(err.message || 'Registration failed. Please check your information.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,22 +94,22 @@ export default function SignupPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 border border-zinc-200 rounded-lg shadow-sm sm:px-8 space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <Input
-              label="Full name"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="e.g. Alex Chen"
-              error={errors.name}
-              required
-            />
+          {/* Server Error Alert */}
+          {serverError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-md text-xs text-rose-700 flex items-start gap-2.5 animate-in fade-in-0 duration-150">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <span>{serverError}</span>
+            </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Input
               label="Organization name"
               value={formData.organization}
               onChange={(e) => handleChange('organization', e.target.value)}
               placeholder="e.g. Acme Logistics Ltd."
               error={errors.organization}
+              disabled={isLoading}
               required
             />
 
@@ -102,7 +120,9 @@ export default function SignupPage() {
               onChange={(e) => handleChange('email', e.target.value)}
               placeholder="name@company.com"
               error={errors.email}
+              disabled={isLoading}
               required
+              autoComplete="email"
             />
 
             <Input
@@ -110,9 +130,22 @@ export default function SignupPage() {
               type="password"
               value={formData.password}
               onChange={(e) => handleChange('password', e.target.value)}
-              placeholder="••••••••"
+              placeholder="At least 8 characters"
               error={errors.password}
+              disabled={isLoading}
               required
+              autoComplete="new-password"
+            />
+
+            <Input
+              label="Confirm password"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => handleChange('confirmPassword', e.target.value)}
+              placeholder="Re-enter your password"
+              error={errors.confirmPassword}
+              disabled={isLoading}
+              autoComplete="new-password"
             />
 
             <div className="pt-2">
@@ -121,13 +154,14 @@ export default function SignupPage() {
                 variant="primary"
                 className="w-full"
                 loading={isLoading}
+                disabled={isLoading}
               >
                 Create Account
               </Button>
             </div>
           </form>
 
-          <div className="text-center text-xs text-zinc-500">
+          <div className="text-center text-xs text-zinc-500 pt-2 border-t border-zinc-100">
             Already have an account?{' '}
             <Link
               to="/login"
