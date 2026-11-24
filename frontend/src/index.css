@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer base {
-  *, ::before, ::after {
-    border-color: #e4e4e7; /* zinc-200 */
+
+  *,
+  ::before,
+  ::after {
+    border-color: #e4e4e7;
+    /* zinc-200 */
   }
 
   body {
