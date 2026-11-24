@@ -3,6 +3,8 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import productService from '../services/productService';
 import { useProducts } from '../context/ProductContext';
+import { useSettings } from '../context/SettingsContext';
+import { getCurrencySymbol } from '../utils/formatters';
 import PageHeader from '../components/ui/PageHeader';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
@@ -13,6 +15,9 @@ export default function ProductFormPage() {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const { showNotification } = useProducts();
+  const { settings } = useSettings();
+  const currencySymbol = getCurrencySymbol(settings?.currency);
+  const currencyCode = (settings?.currency || 'USD').split(' ')[0];
 
   const [formData, setFormData] = useState({
     name: '',
@@ -290,12 +295,12 @@ export default function ProductFormPage() {
 
         <div className="pt-4 border-t border-zinc-100 space-y-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Pricing (USD)
+            Pricing ({currencyCode})
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Cost Price ($)"
+              label={`Cost Price (${currencySymbol})`}
               name="cost_price"
               type="number"
               min="0"
@@ -308,7 +313,7 @@ export default function ProductFormPage() {
             />
 
             <Input
-              label="Selling Price ($)"
+              label={`Selling Price (${currencySymbol})`}
               name="selling_price"
               type="number"
               min="0"

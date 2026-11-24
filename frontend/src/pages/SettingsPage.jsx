@@ -119,10 +119,12 @@ export default function SettingsPage() {
                   onChange={(e) => handleChange('currency', e.target.value)}
                   className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-colors"
                 >
+                  <option value="INR (₹)">INR &mdash; Indian Rupee (₹)</option>
                   <option value="USD ($)">USD &mdash; United States Dollar ($)</option>
                   <option value="EUR (€)">EUR &mdash; Euro (€)</option>
                   <option value="GBP (£)">GBP &mdash; British Pound (£)</option>
                   <option value="CAD ($)">CAD &mdash; Canadian Dollar ($)</option>
+                  <option value="AUD ($)">AUD &mdash; Australian Dollar ($)</option>
                 </select>
               </div>
 

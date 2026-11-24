@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, Package, AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import productService from '../services/productService';
 import { useProducts } from '../context/ProductContext';
+import { useSettings } from '../context/SettingsContext';
+import { formatCurrency } from '../utils/formatters';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -11,6 +13,7 @@ import { StockStatusBadge } from '../components/ui/Badge';
 export default function ProductsPage() {
   const navigate = useNavigate();
   const { showNotification } = useProducts();
+  const { settings } = useSettings();
 
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -210,7 +213,7 @@ export default function ProductsPage() {
                       {product.quantity_on_hand}
                     </td>
                     <td className="py-3 px-4 text-right font-mono text-zinc-900">
-                      {product.selling_price != null ? `$${Number(product.selling_price).toFixed(2)}` : '—'}
+                      {product.selling_price != null ? formatCurrency(product.selling_price, settings.currency) : '—'}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <StockStatusBadge
