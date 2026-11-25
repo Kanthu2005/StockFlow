@@ -73,20 +73,36 @@ class Settings(BaseSettings):
         ]
         if not v:
             return default_origins
+        raw_list: List[str] = []
         if isinstance(v, str):
             cleaned_str = v.strip().strip("'\"").strip()
             if cleaned_str == "*":
                 return ["*"]
             if cleaned_str.startswith("[") and cleaned_str.endswith("]"):
                 try:
-                    parsed = json.loads(cleaned_str)
-                    return [str(i).strip().rstrip("/") for i in parsed if str(i).strip()]
+                    raw_list = json.loads(cleaned_str)
                 except Exception:
                     pass
-            return [i.strip().rstrip("/") for i in cleaned_str.split(",") if i.strip()]
+            if not raw_list:
+                raw_list = [i.strip() for i in cleaned_str.split(",") if i.strip()]
         elif isinstance(v, list):
-            return [str(i).strip().rstrip("/") for i in v if str(i).strip()]
-        return default_origins
+            raw_list = v
+        else:
+            return default_origins
+
+        normalized = set(default_origins)
+        for item in raw_list:
+            origin_str = str(item).strip().rstrip("/")
+            if not origin_str:
+                continue
+            if origin_str == "*":
+                return ["*"]
+            if not origin_str.startswith("http://") and not origin_str.startswith("https://"):
+                normalized.add(f"https://{origin_str}")
+                normalized.add(f"http://{origin_str}")
+            else:
+                normalized.add(origin_str)
+        return list(normalized)
 
     model_config = SettingsConfigDict(
         env_file=".env",
