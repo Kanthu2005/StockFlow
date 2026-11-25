@@ -59,7 +59,7 @@ class Settings(BaseSettings):
         "https://stock-flow-git-main-kanthu2005.vercel.app",
         "https://stock-flow.vercel.app",
     ]
-    CORS_ORIGIN_REGEX: Optional[str] = r"^https:\/\/.*\.vercel\.app$"
+    CORS_ORIGIN_REGEX: Optional[str] = r"^https?:\/\/.*$"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

@@ -11,6 +11,10 @@ import axios from 'axios';
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (!envUrl) {
+    // If deployed on Vercel or any non-localhost domain, automatically fallback to production Render backend
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return 'https://stockflow-bfm1.onrender.com/api';
+    }
     return 'http://127.0.0.1:8000/api';
   }
   const trimmed = envUrl.trim().replace(/\/+$/, '');

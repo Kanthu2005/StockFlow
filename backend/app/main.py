@@ -34,24 +34,15 @@ app = FastAPI(
 
 # CORS configuration supporting local development, Vercel deployments, and custom domains
 cors_origins = [str(origin).rstrip("/") for origin in settings.CORS_ORIGINS]
-allow_all = "*" in cors_origins
 
-if allow_all:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_origin_regex=settings.CORS_ORIGIN_REGEX or r"^https:\/\/.*\.vercel\.app$",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_origin_regex=settings.CORS_ORIGIN_REGEX or r"^https?:\/\/.*$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Standard API routes under /api prefix
 app.include_router(health_router, prefix="/api")
