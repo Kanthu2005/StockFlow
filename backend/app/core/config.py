@@ -56,21 +56,37 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
+        "https://stock-flow-git-main-kanthu2005.vercel.app",
+        "https://stock-flow.vercel.app",
     ]
+    CORS_ORIGIN_REGEX: Optional[str] = r"^https:\/\/.*\.vercel\.app$"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+    def assemble_cors_origins(cls, v: Union[str, List[str], None]) -> List[str]:
+        default_origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "https://stock-flow-git-main-kanthu2005.vercel.app",
+            "https://stock-flow.vercel.app",
+        ]
+        if not v:
+            return default_origins
         if isinstance(v, str):
-            if v.startswith("[") and v.endswith("]"):
+            cleaned_str = v.strip().strip("'\"").strip()
+            if cleaned_str == "*":
+                return ["*"]
+            if cleaned_str.startswith("[") and cleaned_str.endswith("]"):
                 try:
-                    return json.loads(v)
+                    parsed = json.loads(cleaned_str)
+                    return [str(i).strip().rstrip("/") for i in parsed if str(i).strip()]
                 except Exception:
                     pass
-            return [i.strip() for i in v.split(",") if i.strip()]
+            return [i.strip().rstrip("/") for i in cleaned_str.split(",") if i.strip()]
         elif isinstance(v, list):
-            return v
-        return ["http://localhost:5173", "http://127.0.0.1:5173"]
+            return [str(i).strip().rstrip("/") for i in v if str(i).strip()]
+        return default_origins
 
     model_config = SettingsConfigDict(
         env_file=".env",
