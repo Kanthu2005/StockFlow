@@ -1,6 +1,6 @@
 """Centralized application configuration using Pydantic Settings."""
 
-from typing import List, Union
+from typing import List, Union, Optional
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
@@ -22,6 +22,28 @@ class Settings(BaseSettings):
 
     # PostgreSQL Database URL (Psycopg 3)
     DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/stockflow_db"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_database_url(cls, v: Optional[str]) -> str:
+        default_url = "postgresql+psycopg://postgres:postgres@localhost:5432/stockflow_db"
+        if not v or not isinstance(v, str):
+            return default_url
+
+        # Strip whitespace and any quotes (single or double) from environment variable value
+        cleaned = v.strip().strip("'\"").strip()
+
+        if not cleaned:
+            return default_url
+
+        # Render / Heroku compatibility: convert legacy postgres:// to postgresql+psycopg://
+        if cleaned.startswith("postgres://"):
+            cleaned = cleaned.replace("postgres://", "postgresql+psycopg://", 1)
+        # Ensure psycopg driver is explicitly specified if plain postgresql:// is provided
+        elif cleaned.startswith("postgresql://") and not cleaned.startswith("postgresql+psycopg://"):
+            cleaned = cleaned.replace("postgresql://", "postgresql+psycopg://", 1)
+
+        return cleaned
 
     # Connection pooling configuration
     DB_POOL_SIZE: int = 5

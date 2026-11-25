@@ -1,12 +1,27 @@
 """FastAPI application entry point."""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.database.base import Base
+from app.database.session import engine
+import app.models  # Ensure models are registered for table creation
 from app.routes.health import router as health_router
 from app.routes.auth import router as auth_router
 from app.routes.products import router as products_router
 from app.routes.dashboard import router as dashboard_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Auto-initialize database tables on deployment startup if they do not exist
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
+    yield
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -14,6 +29,7 @@ app = FastAPI(
     description="StockFlow - Inventory Management System API",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS configuration for local development
